@@ -144,3 +144,55 @@
 - 生产手段：滚动摘要（旧历史压成一段 summary 保留在 system 后）、
   关键消息钉住（pin）、RAG 化历史（历史入向量库按相关性召回）
 - LangGraph checkpoint 存全量 + 运行时按需组装，是同一问题的不同解法
+
+---
+
+## Day 4 · LangChain 重构 Agent
+
+**Q1：`@tool` 是怎么把函数变成工具 Schema 的？**
+
+- LangChain 读取函数的**类型注解**生成 `properties`，读 **docstring** 生成 `description`
+- 对比 Day 2：手写 `{"type":"object","properties":{...},"required":[...]}` 一长串，`@tool` 全自动
+- `required` 由"无默认值的参数"推断；默认值参数自动变可选（见 `read_file` 的 `max_chars`）
+- 也支持从 pydantic 模型生成，复杂入参时用
+
+**Q2：模型抽象（ChatOpenAI）的价值？**
+
+- 同一份业务代码，换 `base_url` + `model` 就在 OpenAI/DeepSeek/Qwen 间切换
+- 统一接口：`.invoke()` / `.stream()` / 工具绑定 / 消息类型，模型无关
+- 对比 Day 1-3 直接 `OpenAI()`：多模型路由、降级、A/B 时要写多套适配，框架内建
+- 代价：多一层抽象，出问题要先搞清框架内部怎么组消息（黑盒性）
+
+**Q3：`create_agent` 的每个参数对应手写循环哪一步？**
+
+| create_agent | 手写循环 (day02) |
+|---|---|
+| `model` | `client.chat.completions.create(...)` |
+| `tools=TOOLS` | `openai_tools_payload()` 生成 tools 参数 |
+| `system_prompt` | `messages=[{role:"system",...}]` |
+| （内部 while） | `run_agent` 的 `while step < max_steps` |
+| （内部执行+回传） | `dispatch_tool` + `role:"tool"` 回传 |
+| `agent.stream(...)` | 手动 print 每步 |
+
+**Q4：为什么说 create_agent 底层就是 LangGraph？**
+
+- 实测：`type(agent).__name__` = **`CompiledStateGraph`**
+- 所以 Day 5 学 LangGraph 的 State/Node/Edge 不是新东西，而是**把这层封装拆开看**
+- 意义：想加条件边、checkpoint、HITL 时，用底层 LangGraph API 直接改这张图
+
+**Q5：框架省了什么、又隐藏了什么？（核心对比题）**
+
+省了：
+- 手写 JSON Schema、while 循环、消息拼装、工具分发、错误回传
+- 约 100 行 → 约 10 行；多模型/多工具即插即用
+
+隐藏了（面试高频"黑盒"问题）：
+- 到底发了几轮请求、每轮 messages 长什么样（要靠 `stream`/LangSmith trace 才看得见）
+- 默认的 `max_steps`/`recursion_limit` 行为、工具异常如何被包装
+- 出 bug 时若不懂底层循环，很难定位是提示词、工具描述还是框架默认行为
+
+**Q6：并行 vs 串行在 Day 4 日志里怎么体现？**
+
+- 并行：连续两行 `[模型决策]` 后，才出现两行 `[工具结果]`（同一 AI 消息）
+- 串行：`[模型决策]→[工具结果]→[模型决策]→[工具结果]` 交替（多轮 API 往返）
+- 与 Day 2 完全一致，说明框架没有改变底层协议，只是封装

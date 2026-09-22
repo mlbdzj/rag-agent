@@ -5,7 +5,7 @@
 | Day 1 | 多轮对话 + 流式输出 + Token 统计 | `day01_chat.py` | ✅ |
 | Day 2 | Tool Calling 手写 Agent 循环 | `day02_tools.py` | ✅ |
 | Day 3 | 提示词/上下文工程 + 结构化输出 | `day03_context.py` | ✅ |
-| Day 4 | LangChain 重构 | `day04_langchain.py` | ⬜ |
+| Day 4 | LangChain 重构 | `day04_langchain.py` | ✅ |
 | Day 5 | LangSmith 接入 + 周复盘 | — | ⬜ |
 
 > 自检问答（面试口述素材）见 **[QA.md](./QA.md)**
@@ -19,7 +19,17 @@ Copy-Item ..\.env.example ..\.env   # 然后填入 DeepSeek Key
 uv run week01/day01_chat.py
 uv run week01/day02_tools.py
 uv run week01/day03_context.py
+uv run week01/day04_langchain.py
 ```
+
+## Day 4 自检
+
+- [x] 口述 @tool 如何把函数变成工具 Schema
+- [x] 说明模型抽象的价值（换服务商只改 base_url）
+- [x] 指出 create_agent 的每个参数对应手写循环的哪一步
+- [x] 验证 `type(agent).__name__ == CompiledStateGraph`（底层是 LangGraph）
+- [x] 实测并行/串行/文件读取三种场景
+- [x] 口述：框架省了什么、隐藏了什么
 
 ## Day 3 自检
 
