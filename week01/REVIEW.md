@@ -33,6 +33,51 @@ Day5  拆开看封装: 图 + 回调 + token      → 看得见内部
 
 **结论**：框架没有改变协议，只是把控制流封装成了一张图。
 
+## 图结构 ↔ 手写循环 逐行对照
+
+```
+   LangGraph 图 (Day4/5 由 create_agent 生成)          手写循环 (day02_tools.py)
+   ──────────────────────────────────────            ──────────────────────────────
+
+            ┌───────────┐
+            │ __start__ │
+            └─────┬─────┘
+                  │
+                  ▼
+        ┌───────────────────┐
+        │      model        │ ◄──────────────────────┐
+        │  (LLM 决策节点)    │                        │
+        └─────────┬─────────┘                        │
+                  │  条件边 (由 LangGraph 判定)       │
+          ┌───────┴────────┐                        │
+          │                │                         │
+   (无 tool_calls)   (有 tool_calls)                 │
+          │                │                         │
+          ▼                ▼                         │
+   ┌───────────┐   ┌───────────────┐               │
+   │  __end__  │   │    tools      │               │
+   │ (输出回答)│   │  (执行工具)    │               │
+   └───────────┘   └───────┬───────┘               │
+                            │  条件边                 │
+                            └───────────────────────┘
+```
+
+| 图中的元素 | 对应手写代码 `day02_tools.py` | 说明 |
+|---|---|---|
+| `model` 节点 | `L188` `client.chat.completions.create(...)` | 发起 LLM 请求 |
+| `model` 节点读取 | `L194` `choice = response.choices[0]` | 取模型输出 |
+| 条件边 `model→__end__` | `L198` `if not msg.tool_calls:` → `L201 return` | 无工具 → 输出并结束 |
+| `model→tools` 的消息拼装 | `L204-217` `append(assistant 含 tool_calls)` | 把决策记入历史 |
+| `tools` 节点入口 | `L220` `for tc in msg.tool_calls:` | 遍历本轮调用 |
+| `tools` 节点执行 | `L227` `dispatch_tool(name, args)` | 真正执行工具 |
+| `tools` 回传消息 | `L229-231` `append({role:"tool"...})` | 结果记入历史 |
+| 条件边 `tools→model` | `L186` `while step < max_steps:` 回到顶部 | 结果回喂，再决策 |
+| `__start__` / `__end__` | 函数入口 / `return` | 哨兵节点 |
+
+**读图口诀**：`model ⇄ tools` 是循环体，两条条件边就是 `if not tool_calls` 和 `while` 回跳；
+框架把这三段控制流画成了带条件边的有向图 —— 这就是 LangGraph 的全部本质。
+
+
 ## 必须能口述的 8 个点
 
 1. messages 无状态协议：每轮重发全量历史 → 越长越贵
