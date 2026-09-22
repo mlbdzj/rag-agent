@@ -7,9 +7,11 @@
 |-----|------|------|------|
 | Day 6 | 语料准备 + 文档解析 | `make_corpus.py` / `day06_load.py` | ✅ |
 | Day 7 | 分块策略实验 | `day07_chunk.py` | ✅ |
-| Day 8 | Embedding + Chroma 入库检索 | `day08_embed_store.py` | ⬜ |
+| Day 8 | Embedding + Chroma 入库检索 | `day08_embed_store.py` | ✅ |
 | Day 9 | 检索→生成全链路（项目① MVP） | `day09_rag.py` | ⬜ |
 | Day 10 | 失败模式实验 + 复盘 | — | ⬜ |
+
+> 自检问答见 **[QA.md](./QA.md)**
 
 ## 运行
 
@@ -24,6 +26,12 @@ uv run week02/day06_load.py admin_guide   # 查看某文件内容
 # 分块策略对比
 uv run week02/day07_chunk.py
 uv run week02/day07_chunk.py 02_pricing   # 单文件三策略对比
+
+# 向量化与检索 (首次会自动下载 BGE 模型, 走 hf-mirror)
+uv run week02/embeddings.py                     # 验证 embedding
+uv run week02/day08_embed_store.py build        # 建索引
+uv run week02/day08_embed_store.py query "企业版多少钱"
+uv run week02/day08_embed_store.py              # 交互检索
 ```
 
 ## 语料说明
@@ -53,3 +61,11 @@ uv run week02/day07_chunk.py 02_pricing   # 单文件三策略对比
 - [ ] 解释 `chunk_overlap` 的作用与代价
 - [ ] 说出字符级重叠的缺陷（会从词中间切入，如 `' 万次'`）
 - [ ] 思考：为什么混合检索（Week3）更适合**较小**分块（如 256）？
+
+## Day 8 自检
+
+- [ ] 口述向量库三要素（向量/document/metadata）
+- [ ] 解释 BGE 为何 query 加指令前缀、passage 不加
+- [ ] 说出 `similarity = 1 - distance` 与 `hnsw:space=cosine`
+- [ ] 复现"段落书写不一致导致误排"的现象
+- [ ] 记录本次检索的两个问题（块粒度、语义假阳性）
