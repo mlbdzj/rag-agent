@@ -245,3 +245,21 @@ tools  -.条件.-> model       （工具结果回喂，形成循环）
 - Week 1 目标是**理解 LLM 应用运行机制**，本地 trace 已能看清：请求次数、上下文增长、工具调用、耗时、token
 - 外部观测平台的价值在**生产级、多用户、长期回归、团队协作**，留到 Week 7（评测与观测）再上更合适
 - 避免过早引入外部依赖，先把原理吃透
+
+**Q6：`/graph` 画的图和 LangGraph 到底是什么关系？**
+
+- 不是比喻——那张图**本身就是 LangGraph**，准确说是 `CompiledStateGraph` 对象的数据结构渲染
+- 三层关系：
+  ```
+  langgraph 库:  定义层(StateGraph/add_node/add_edge/add_conditional_edges)
+                 + 产物(CompiledStateGraph) + 运行时(执行/State/条件跳转/checkpoint)
+        ▲ 调用 API 预组装
+  create_agent = "厂家预装的 LangGraph 模板": 帮你 add 好 model/tools 节点与条件边
+        └─ 返回值 CompiledStateGraph ← 就是 /graph 看到的图
+  ```
+- 要点：
+  1. 实现：图 = LangGraph 数据结构的可视化，非手绘示意
+  2. 生成：create_agent 用 LangGraph API 把 ReAct 循环拼成图
+  3. 运行时：执行/状态/条件边/将来的 checkpoint+interrupt，全靠 LangGraph 引擎
+  4. 学习：Week1 只是**观察**框架生成的图；Week4 用 `StateGraph` **亲手造**，`get_graph()` 画出来同款
+- 心智模型：电路图=这张图｜能画能跑的机器=LangGraph｜厂家预装电路=create_agent｜自己焊=Week4 自建
