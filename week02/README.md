@@ -9,9 +9,9 @@
 | Day 7 | 分块策略实验 | `day07_chunk.py` | ✅ |
 | Day 8 | Embedding + Chroma 入库检索 | `day08_embed_store.py` | ✅ |
 | Day 9 | 检索→生成全链路（项目① MVP） | `day09_rag.py` | ✅ |
-| Day 10 | 失败模式实验 + 复盘 | — | ⬜ |
+| Day 10 | 失败模式实验 + 复盘 | `day10_failures.py` | ✅ |
 
-> 自检问答见 **[QA.md](./QA.md)**
+> 自检问答见 **[QA.md](./QA.md)** ｜ 周复盘见 **[REVIEW.md](./REVIEW.md)** ｜ 失败模式见 **[notes/week2_failure_modes.md](./notes/week2_failure_modes.md)**
 
 ## 运行
 
@@ -81,3 +81,12 @@ uv run week02/day09_rag.py                      # 交互问答
 - [x] 拒答问题：指纹登录（语料没有）→ 正确回答"资料中未找到"
 - [ ] 口述 RAG prompt 三原则（只依据资料 / 标注引用 / 不知道就说）
 - [ ] 分析漏召：私有化版 API 配额在 `04_api_spec.md` 却未被检索到
+
+## Day 10 自检
+
+- [x] 跑完 10 用例测试集（9 对 1 错），结果存 `notes/`
+- [x] 归类 5 类失败模式（漏召 / 块粒度 / 假阳性 / 表格 / 拒答两难）
+- [x] 定位唯一失败的根因（私有化版表格行漏召）
+- [ ] 口述 FM-1~FM-5 及各自 Week3 解法
+- [ ] 完成 Week 2 复盘（[REVIEW.md](./REVIEW.md)）
+
