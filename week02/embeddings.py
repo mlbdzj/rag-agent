@@ -8,15 +8,18 @@ BGE (BAAI General Embedding) 中文检索要点:
 
 from __future__ import annotations
 
+import hashlib
 import os
 
 # 若未设置 HF 镜像, 默认走国内镜像 (避免下载失败)
 os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 
 from functools import lru_cache
+from pathlib import Path
 
 MODEL_NAME = "BAAI/bge-small-zh-v1.5"
 QUERY_INSTRUCTION = "为这个句子生成表示以用于检索相关文章："
+CACHE_DIR = Path(__file__).parent / "data" / "embed_cache"
 
 
 @lru_cache(maxsize=1)
@@ -40,9 +43,30 @@ class BGEEmbedder:
             return model.get_embedding_dimension()
         return model.get_sentence_embedding_dimension()
 
-    def encode_passages(self, texts: list[str]) -> list[list[float]]:
+    def encode_passages(self, texts: list[str], use_cache: bool = True) -> list[list[float]]:
+        """编码段落; 结果按 (模型, 文本) 哈希缓存到磁盘, 避免重复编码。"""
+        cache_file = None
+        if use_cache:
+            digest = hashlib.md5(
+                (self.model_name + "\x00" + "\x00".join(texts)).encode("utf-8")
+            ).hexdigest()
+            cache_file = CACHE_DIR / f"{digest}.npy"
+            if cache_file.exists():
+                import numpy as np
+
+                cached = np.load(cache_file)
+                if cached.shape[0] == len(texts):
+                    return cached.tolist()
+
         vecs = get_model().encode(texts, normalize_embeddings=True, show_progress_bar=len(texts) > 16)
-        return [v.tolist() for v in vecs]
+        result = [v.tolist() for v in vecs]
+
+        if cache_file is not None:
+            import numpy as np
+
+            CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            np.save(cache_file, np.asarray(result, dtype="float32"))
+        return result
 
     def encode_query(self, text: str) -> list[float]:
         vec = get_model().encode(QUERY_INSTRUCTION + text, normalize_embeddings=True)
