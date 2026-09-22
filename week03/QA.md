@@ -84,3 +84,52 @@
 - 用托管重排 API（Cohere/Jina）
 - 缓存 query 的 rerank 结果（同 query 重复时）
 
+---
+
+## Day 13 · LlamaIndex
+
+**Q1：LlamaIndex 的核心抽象链条？**
+
+```
+Document(原始) --SentenceSplitter--> Node(块) --VectorStoreIndex--> Index
+                                                    |
+                                          as_retriever() -> Retriever -> NodeWithScore
+```
+
+- `Document`：原始文本 + metadata
+- `Node`：分块后的最小检索单元（含元数据与关系）
+- `Index`：把 Node 组织起来（VectorStoreIndex 存向量）
+- `Retriever`：查询时返回带 score 的 Node 列表
+
+**Q2：LlamaIndex 2.0 与旧版的区别？**
+
+- 旧版：`ServiceContext.from_defaults(llm=..., embed_model=...)`
+- 2.0：全局 `Settings.llm / Settings.embed_model / Settings.chunk_size`，已移除 ServiceContext
+- 迁移时把 ServiceContext 配置改为 Settings 赋值即可
+
+**Q3：如何让 LlamaIndex 用本地模型且不联网？**
+
+- `HuggingFaceEmbedding(model_name=<本地快照路径>)`：直接指向 `~/.cache/huggingface/.../snapshots/<hash>`
+- 设 `HF_HUB_OFFLINE=1`：强制只用缓存，杜绝任何下载
+- 适合内网/离线环境，也避免每次误触发联网
+
+**Q4：用了 LlamaIndex，FM-1 为什么还是失败？**
+
+- 同一问题"私有化版 API 配额"，LlamaIndex 检索 top-5 仍无正确表块
+- **结论：检索成败取决于语料结构、分块策略、检索方式，而不是框架**
+- 框架只是把流程标准化，解决不了"表格被切散 + 纯向量不敏感"的根本问题
+- 真正的解法：表格结构化、混合检索、更强重排（Week3 Day11/12 的方向）
+
+**Q5：手写管线 vs LlamaIndex 怎么选？**
+
+| 维度 | 手写 | LlamaIndex |
+|---|---|---|
+| 代码量 | 多（~100 行） | 少（~15 行） |
+| 可控性 | 完全可控，易定制 | 需熟悉其抽象与扩展点 |
+| 生态 | 无 | 连接器/索引/检索器丰富 |
+| 调试 | 透明 | 有黑盒性 |
+
+- 学习阶段：手写一遍懂原理，再用框架提效
+- 生产：数据链路复杂选 LlamaIndex；要极致控制可手写关键环节
+
+

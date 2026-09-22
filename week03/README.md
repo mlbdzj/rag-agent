@@ -7,7 +7,7 @@
 |-----|------|------|------|
 | Day 11 | 混合检索 BM25 + 向量 + RRF | `day11_hybrid.py` | ✅ |
 | Day 12 | Rerank 重排序（cross-encoder） | `day12_rerank.py` | ✅ |
-| Day 13 | LlamaIndex 2.0 重构 | `day13_llamaindex.py` | ⬜ |
+| Day 13 | LlamaIndex 2.0 重构 | `day13_llamaindex.py` | ✅ |
 | Day 14 | 查询侧优化（多查询/HyDE/子问题） | `day14_query.py` | ⬜ |
 | Day 15 | 项目① FastAPI 化 + 复盘 | `app.py` | ⬜ |
 
@@ -21,6 +21,9 @@ uv run week03/day11_hybrid.py "私有化版的API配额是多少"   # 单查询�
 
 uv run week03/day12_rerank.py                 # 粗排 vs 精排对比
 uv run week03/day12_rerank.py "私有化版的API配额是多少"
+
+uv run week03/day13_llamaindex.py build        # 建 LlamaIndex 索引
+uv run week03/day13_llamaindex.py "企业版多少钱"
 ```
 
 ## 关键设计
@@ -87,4 +90,24 @@ uv run week03/day12_rerank.py "私有化版的API配额是多少"
 - 每个 `uv run` 进程都要冷启动 torch + sentence-transformers + 加载模型（约 20–40s）
 - 首次会下载模型到 `~/.cache/huggingface/hub`
 - 已给 embedding 加磁盘缓存（`week02/data/embed_cache/`），避免重复编码
+
+## Day 13 自检
+
+- [x] `VectorStoreIndex.from_documents` 建索引（29 节点）
+- [x] 2.0 用全局 `Settings` 取代旧版 `ServiceContext`
+- [x] 本地 BGE 离线接入（指到本地快照 + `HF_HUB_OFFLINE=1`）
+- [x] 同一 FM-1 用例仍失败 → 框架不解决数据/策略问题
+- [ ] 口述 Document / Node / Index / Retriever 的关系
+- [ ] 对比手写管线 vs LlamaIndex 的代码量与可控性
+
+## Day 13 要点
+
+1. **抽象分层**：`Document`（原始）→ `SentenceSplitter` → `Node`（块）→ `Index` → `Retriever`
+2. **2.0 迁移点**：`Settings.embed_model / chunk_size / chunk_overlap` 全局配置；旧 `ServiceContext` 已移除
+3. **本地模型离线使用**：`HuggingFaceEmbedding(model_name=<本地快照路径>)` + `HF_HUB_OFFLINE=1`，零网络
+4. **框架 vs 手写**：建索引从 ~100 行降到 ~15 行；但**同一 FM-1 仍然失败**——
+   证明**检索质量取决于数据/分块/检索策略，而非框架**
+5. **依赖冲突**：`llama-index-llms-openai-like` 锁 `openai<1.108`，与本项目 `openai 3.x` 冲突
+   → 只用 LlamaIndex 做**索引/检索**，生成继续用我们的 DeepSeek 客户端（解耦更清晰）
+
 
