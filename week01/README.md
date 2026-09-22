@@ -6,9 +6,9 @@
 | Day 2 | Tool Calling 手写 Agent 循环 | `day02_tools.py` | ✅ |
 | Day 3 | 提示词/上下文工程 + 结构化输出 | `day03_context.py` | ✅ |
 | Day 4 | LangChain 重构 | `day04_langchain.py` | ✅ |
-| Day 5 | LangSmith 接入 + 周复盘 | — | ⬜ |
+| Day 5 | 本地可观测性 + 周复盘 | `day05_observability.py` | ✅ |
 
-> 自检问答（面试口述素材）见 **[QA.md](./QA.md)**
+> 自检问答（面试口述素材）见 **[QA.md](./QA.md)** ｜ 周复盘见 **[REVIEW.md](./REVIEW.md)**
 
 ## 运行
 
@@ -20,25 +20,9 @@ uv run week01/day01_chat.py
 uv run week01/day02_tools.py
 uv run week01/day03_context.py
 uv run week01/day04_langchain.py
+uv run week01/day05_observability.py
+uv run week01/test_day03_selfcheck.py   # Day3 重试路径单测
 ```
-
-## Day 4 自检
-
-- [x] 口述 @tool 如何把函数变成工具 Schema
-- [x] 说明模型抽象的价值（换服务商只改 base_url）
-- [x] 指出 create_agent 的每个参数对应手写循环的哪一步
-- [x] 验证 `type(agent).__name__ == CompiledStateGraph`（底层是 LangGraph）
-- [x] 实测并行/串行/文件读取三种场景
-- [x] 口述：框架省了什么、隐藏了什么
-
-## Day 3 自检
-
-- [x] 说出模板 vs f-string 的三个理由（见 QA.md Q1）
-- [x] 判断：哪些场景该加 few-shot、哪些不该（见 QA.md Q2）
-- [x] 口述上下文工程四要素（见 QA.md Q3）
-- [x] extract 模式贴一段含人名/公司/日期的文本，观察校验-重试链路（实测：张志东/腾讯/6602亿全抽出）
-- [x] 观察重试兜底：无结构信息→合法空数组直通；`test_day03_selfcheck.py` mock 验证重试耗尽
-- [x] 解释为何结构化任务 `temperature=0`（`chat_with_schema` 第143行，chat 模式 0.7 对比）
 
 ## Day 1 自检
 
@@ -53,4 +37,30 @@ uv run week01/day04_langchain.py
 - [x] 解释 `tool_call_id` 一一对应
 - [x] 说明 `max_steps=8` 防什么
 - [x] 工具失败为何返回 JSON 而非抛异常
-- [ ] 实测：并行（天气+计算）vs 串行（温度→华氏）
+- [x] 实测：并行（天气+计算，Day4）vs 串行（温度→华氏，Day2）
+
+## Day 3 自检
+
+- [x] 说出模板 vs f-string 的三个理由（见 QA.md Q1）
+- [x] 判断：哪些场景该加 few-shot、哪些不该（见 QA.md Q2）
+- [x] 口述上下文工程四要素（见 QA.md Q3）
+- [x] extract 模式贴一段含人名/公司/日期的文本，观察校验-重试链路（实测：张志东/腾讯/6602亿全抽出）
+- [x] 观察重试兜底：无结构信息→合法空数组直通；`test_day03_selfcheck.py` mock 验证重试耗尽
+- [x] 解释为何结构化任务 `temperature=0`
+
+## Day 4 自检
+
+- [x] 口述 @tool 如何把函数变成工具 Schema
+- [x] 说明模型抽象的价值（换服务商只改 base_url）
+- [x] 指出 create_agent 的每个参数对应手写循环的哪一步
+- [x] 验证 `type(agent).__name__ == CompiledStateGraph`（底层是 LangGraph）
+- [x] 实测并行/串行/文件读取三种场景
+- [x] 口述：框架省了什么、隐藏了什么（@tool 数据结构 / create_agent 控制流）
+
+## Day 5 自检
+
+- [x] 读懂 `/graph`：nodes/edges、条件边、Mermaid
+- [x] 用回调追踪每次 LLM/工具调用的耗时
+- [x] 从 `usage_metadata` 汇总 token 与成本
+- [x] 观察 DeepSeek prompt caching（trace 中 `cache_read`）
+- [x] 完成 Week 1 复盘（[REVIEW.md](./REVIEW.md)）

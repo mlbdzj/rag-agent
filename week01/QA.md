@@ -203,3 +203,45 @@
 - **编排层 `create_agent`**：封装的不止解析，而是**控制流**——while 循环、消息拼装、多 tool_calls 分发回传、异常包装、终止判断
 - 一句话：`@tool` 封装**数据结构**，`create_agent` 封装**程序结构**
 - 视角转变：从"写循环的人"变成"配置循环的人"；出 bug 时要知道底层循环长什么样才能定位
+
+---
+
+## Day 5 · 本地可观测性
+
+**Q1：`/graph` 看到的图结构说明什么？**
+
+```
+__start__ → model
+model  -.条件.-> __end__     （无需工具，直接回答）
+model  -.条件.-> tools       （需要工具）
+tools  -.条件.-> model       （工具结果回喂，形成循环）
+```
+
+- 手写的 while 循环 = 这里的 `model ⇄ tools` 条件环
+- `model -> __end__` 对应手写的 `if not msg.tool_calls: return`
+- 节点只有 `model` 和 `tools` 两个业务节点，其余是 start/end 哨兵
+
+**Q2：本地回调追踪器替代了 LangSmith 的什么？**
+
+- `on_chat_model_start/end`：记录每次 LLM 请求的上下文规模、耗时、token
+- `on_tool_start/end`：记录工具入参出参与次数
+- 足够本地排查"慢在哪、调了几次、花了多少"；LangSmith 额外给的是**跨会话集中存储、可视化、评测、团队共享**
+
+**Q3：token 从哪拿？两种途径？**
+
+1. 回调 `on_llm_end` 里 `response.generations[0][0].message.usage_metadata`
+2. 遍历最终消息列表，累加每条 `AIMessage.usage_metadata`（`sum_usage`，双保险）
+- 二者应一致；生产用其一即可，双写便于学习时对照验证
+
+**Q4：什么是 prompt caching？trace 里 `cache_read` 是什么？**
+
+- 服务商把**稳定前缀**（system + 工具定义）缓存，下次请求命中则按更低价计费
+- DeepSeek/OpenAI 都会在 usage 里返回 `input_token_details.cache_read`（命中缓存的 token 数）
+- 启发：把不变的内容（system、工具定义、few-shot）放最前，可变内容（用户输入）放最后 → 提升命中率省钱
+- 对应 Day 3 上下文工程四要素里的"缓存意识"
+
+**Q5：为什么 Day 5 不用外部平台也能满足 Week 1 目标？**
+
+- Week 1 目标是**理解 LLM 应用运行机制**，本地 trace 已能看清：请求次数、上下文增长、工具调用、耗时、token
+- 外部观测平台的价值在**生产级、多用户、长期回归、团队协作**，留到 Week 7（评测与观测）再上更合适
+- 避免过早引入外部依赖，先把原理吃透
