@@ -6,7 +6,7 @@
 | Day | 主题 | 脚本 | 状态 |
 |-----|------|------|------|
 | Day 6 | 语料准备 + 文档解析 | `make_corpus.py` / `day06_load.py` | ✅ |
-| Day 7 | 分块策略实验 | `day07_chunk.py` | ⬜ |
+| Day 7 | 分块策略实验 | `day07_chunk.py` | ✅ |
 | Day 8 | Embedding + Chroma 入库检索 | `day08_embed_store.py` | ⬜ |
 | Day 9 | 检索→生成全链路（项目① MVP） | `day09_rag.py` | ⬜ |
 | Day 10 | 失败模式实验 + 复盘 | — | ⬜ |
@@ -20,6 +20,10 @@ uv run week02/make_corpus.py
 # 解析并统计
 uv run week02/day06_load.py
 uv run week02/day06_load.py admin_guide   # 查看某文件内容
+
+# 分块策略对比
+uv run week02/day07_chunk.py
+uv run week02/day07_chunk.py 02_pricing   # 单文件三策略对比
 ```
 
 ## 语料说明
@@ -41,3 +45,11 @@ uv run week02/day06_load.py admin_guide   # 查看某文件内容
 - [ ] 解释 metadata 的 source/page 在后续哪两个环节被用到
 - [ ] 运行 `day06_load.py admin_guide` 确认 PDF 中文抽取正常
 - [ ] 思考：为什么 PDF 按"页"存、Markdown 按"文件"存？（Day7 分块会用到）
+
+## Day 7 自检
+
+- [ ] 口述三种分块策略的差异（fixed 会切断句子 / recursive 找自然边界 / markdown 保标题语义）
+- [ ] 观察：`fixed` 结尾常是半句，`markdown` 块长不均（42~721）
+- [ ] 解释 `chunk_overlap` 的作用与代价
+- [ ] 说出字符级重叠的缺陷（会从词中间切入，如 `' 万次'`）
+- [ ] 思考：为什么混合检索（Week3）更适合**较小**分块（如 256）？
