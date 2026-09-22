@@ -21,8 +21,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+# Windows 控制台 UTF-8 输出/输入
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stdin, "reconfigure"):
+    sys.stdin.reconfigure(encoding="utf-8", errors="replace")
 
 # ---------------------------------------------------------------------------
 # 1. 提示词模板 (变量注入, 不用 f-string 裸拼)
@@ -44,8 +47,10 @@ PROMPTS = {
         "system": (
             "你是信息抽取器。从用户文本中抽取实体, "
             "只输出 JSON, 不要任何解释文字。\n"
+            "字段说明: people=人名, orgs=公司/机构名, dates=日期/年份, amounts=金额/数字。\n"
+            "必须抽取文本中出现的中文人名与公司名, 不要遗漏; 没有才用空数组 []。\n"
             "JSON 必须严格符合 schema:\n"
-            '{"people": string[], "orgs": string[], "dates": string[], "amounts": string[]}'
+            '{{"people": string[], "orgs": string[], "dates": string[], "amounts": string[]}}'
         ),
         "user": "抽取以下文本:\n<<<\n{text}\n>>>",
         "vars": {},
@@ -53,7 +58,7 @@ PROMPTS = {
     "review": {
         "system": (
             "你是资深 code reviewer。按 JSON 输出评审结果。\n"
-            "Schema: {\"score\": 1-5整数, \"issues\": [{\"line\": 整数, \"severity\": \"high|med|low\", \"msg\": string}], \"summary\": string}\n"
+            'Schema: {{"score": 1-5整数, "issues": [{{"line": 整数, "severity": "high|med|low", "msg": string}}], "summary": string}}\n'
             "评分标准示例:\n"
             "输入: \"def add(a,b): return a+b\"  -> 输出 {{\"score\": 3, \"issues\": [{{\"line\": 1, \"severity\": \"low\", \"msg\": \"缺类型注解与 docstring\"}}], \"summary\": \"能用但缺规范\"}}\n"
             "只输出 JSON。"
@@ -225,7 +230,7 @@ def main() -> None:
 
     while True:
         try:
-            user_input = input(f"\n[{mode}] 你> ").strip()
+            user_input = input(f"\n[{mode}] 你> ").strip().lstrip("﻿")
         except (EOFError, KeyboardInterrupt):
             print("\n再见!")
             break

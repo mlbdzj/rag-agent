@@ -23,12 +23,12 @@ uv run week01/day03_context.py
 
 ## Day 3 自检
 
-- [ ] 说出模板 vs f-string 的三个理由
-- [ ] 判断：哪些场景该加 few-shot、哪些不该
-- [ ] 口述上下文工程四要素
-- [ ] extract 模式贴一段含人名/公司/日期的文本，观察校验-重试链路
-- [ ] 故意问无结构的信息，观察 `重试耗尽` 兜底
-- [ ] 解释为何结构化任务 `temperature=0`
+- [x] 说出模板 vs f-string 的三个理由（见 QA.md Q1）
+- [x] 判断：哪些场景该加 few-shot、哪些不该（见 QA.md Q2）
+- [x] 口述上下文工程四要素（见 QA.md Q3）
+- [x] extract 模式贴一段含人名/公司/日期的文本，观察校验-重试链路（实测：张志东/腾讯/6602亿全抽出）
+- [x] 观察重试兜底：无结构信息→合法空数组直通；`test_day03_selfcheck.py` mock 验证重试耗尽
+- [x] 解释为何结构化任务 `temperature=0`（`chat_with_schema` 第143行，chat 模式 0.7 对比）
 
 ## Day 1 自检
 
