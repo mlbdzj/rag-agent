@@ -15,3 +15,8 @@ wheels/
 # Chat logs / notes
 *.log
 notes/private/
+
+# Generated corpora & vector stores (可通过脚本重建)
+week02/data/
+**/chroma_db/
+*.pdf
